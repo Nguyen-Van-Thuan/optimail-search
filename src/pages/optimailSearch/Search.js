@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Form, FormGroup, Input, Spinner, Table } from "reactstrap";
-import { useGetData } from "../hook";
+import { Form, FormGroup, Input, Table } from "reactstrap";
+import { debounce } from "lodash"
 
 //  B1: Khai báo handleSubmit => thực hiện logic khi user gửi 1 y/c tìm kiếm
 //  B2: Xác định giá trị người dùng nhập vào ô tìm kiếm => handleSearch()
@@ -12,15 +12,17 @@ const Search = () => {
   const [textSearch, setTextSearch] = useState("");
   const [dataPost, setDataPost] = useState("");
 
+  const debouncedSearch = debounce((criteria) => {
+    setTextSearch((criteria));
+  }, 3000);
+
   const handleSearch = (event) => {
     //thực hiện logic khi user nhập vào ô tìm kiếm
-    setTextSearch(event.target.value);
+    debouncedSearch(event.target.value);
   };
 
-  const { isLoading, isError, error, data } = useGetData();
-  console.log(data);
-  console.log(isLoading, "isLoading");
   useEffect(() => {
+    console.log(textSearch, "textSearch");
     try {
       axios({
         method: "get",
@@ -32,12 +34,6 @@ const Search = () => {
       console.log(error);
     }
   }, [textSearch]);
-  if (isLoading)
-    return (
-      <p>
-        <Spinner />
-      </p>
-    );
 
   return (
     <div className="container mt-4">
@@ -62,13 +58,13 @@ const Search = () => {
           </tr>
         </thead>
         <tbody>
-          {(!dataPost || dataPost.length == 0) && (
+          {(!dataPost || dataPost?.length === 0) && (
             <tr>
               <td colSpan={3}>Người dùng chưa nhập vào input</td>
             </tr>
           )}
           {dataPost &&
-            dataPost.map((item) => {
+            dataPost?.map((item) => {
               return (
                 <tr key={item.id}>
                   <th scope="row">{item.id}</th>
